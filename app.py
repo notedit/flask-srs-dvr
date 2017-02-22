@@ -22,8 +22,8 @@ config.set_default(uploadsuffix='.ufile.ucloud.cn')
 config.set_default(downloadsuffix='.ufile.ucloud.com.cn')
 
 
-public_key = 'your public key' 
-private_key = 'your private key'
+public_key = 'peJQ+GdSe2xZCxvxuSmArNDzfc46RF86c6xyYnIck6NkzVPqPykZKQ==' 
+private_key = '4d384c6bb3113cadc354891109d37635b4aa8221'
 
 app = Flask(__name__)
 
