@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # author: llx
 
+import os 
 import uuid
 import hmac
 import hashlib
@@ -26,6 +27,8 @@ config.set_default(downloadsuffix='.ufile.ucloud.com.cn')
 
 public_key = 'peJQ+GdSe2xZCxvxuSmArNDzfc46RF86c6xyYnIck6NkzVPqPykZKQ==' 
 private_key = '4d384c6bb3113cadc354891109d37635b4aa8221'
+
+bucket_name = 'live-stream'
 
 app = Flask(__name__)
 
@@ -86,15 +89,14 @@ def on_unpublish():
 
 @celery.task()
 def upload_task(appname,stream,filepath):
-    print 'task'
+    print 'uploadtask ', appname, stream, filepath 
 
-
-
-def upload_file(bucket,key,local_file):
+    file_key = os.path.basename(filepath)
     handler = putufile.PutUFile(public_key, private_key)
-    ret, resp = handler.putfile(bucket, key, local_file)
-    print 'status ',resp.status_code  
+    ret, resp = handler.putfile(bucket_name, file_key, filepath)
+    print 'upload result ', ret, resp 
 
+    
 
 if __name__ == "__main__":
     app.run()
