@@ -30,7 +30,7 @@ private_key = '4d384c6bb3113cadc354891109d37635b4aa8221'
 
 bucket_name = 'live-stream'
 
-app = Flask(__name__)
+app = Flask('app')
 
 app.config.update(
     CELERY_BROKER_URL='redis://localhost:6379',
@@ -41,7 +41,7 @@ app.config.update(
 def make_celery(app):
     celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'],
                     broker=app.config['CELERY_BROKER_URL'])
-    celery.conf.update(app.config)
+
     TaskBase = celery.Task
     class ContextTask(TaskBase):
         abstract = True
@@ -52,6 +52,18 @@ def make_celery(app):
     return celery 
 
 celery = make_celery(app)
+
+
+@celery.task(name='app.upload_task')
+def upload_task(appname,stream,filepath):
+    print 'uploadtask ', appname, stream, filepath 
+    
+    file_key = os.path.basename(filepath)
+    handler = putufile.PutUFile(public_key, private_key)
+    ret, resp = handler.putfile(bucket_name, file_key, filepath)
+    print 'upload result ', ret, resp 
+
+
 
 @app.route('/api/on_dvr', methods=['GET','POST'])
 def on_dvr():
@@ -85,16 +97,6 @@ def on_unpublish():
 
     return '0'
 
-
-
-@celery.task()
-def upload_task(appname,stream,filepath):
-    print 'uploadtask ', appname, stream, filepath 
-
-    file_key = os.path.basename(filepath)
-    handler = putufile.PutUFile(public_key, private_key)
-    ret, resp = handler.putfile(bucket_name, file_key, filepath)
-    print 'upload result ', ret, resp 
 
     
 
