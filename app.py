@@ -7,16 +7,60 @@ import hashlib
 import base64
 import time
 
+from celery import Celery
+
 from flask import Flask
 from flask import jsonify
 
+from ucloud.ufile import config
+from ucloud.ufile import putufile
+from ucloud.compact import b
+from ucloud.logger import logger, set_log_file
+from ucloud.compact import BytesIO
+
+config.set_default(uploadsuffix='.ufile.ucloud.cn')
+config.set_default(downloadsuffix='.ufile.ucloud.com.cn')
+
+
+public_key = 'your public key' 
+private_key = 'your private key'
+
 app = Flask(__name__)
 
+app.config.update(
+    CELERY_BROKER_URL='redis://localhost:6379',
+    CELERY_RESULT_BACKEND='redis://localhost:6379'
+)
+
+
+def make_celery(app):
+    celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'],
+                    broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+    TaskBase = celery.Task
+    class ContextTask(TaskBase):
+        abstract = True
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+    celery.Task = ContextTask
+    return celery 
+
+celery = make_celery(app)
 
 @app.route('/api/on_dvr', methods=['GET','POST'])
 def on_dvr():
 
-    print request.values.to_dict()
+    data = request.values.to_dict()
+
+    print 'on_dvr ',data 
+
+    action = data['action']
+    app = data['app']
+    stream = data['stream']
+    file = data['file']
+
+    upload_task.delay(app,stream,file)
 
     return 'ok'
 
@@ -35,6 +79,19 @@ def on_unpublish():
     print request.values.to_dict()
 
     return 'ok'
+
+
+
+@celery.task()
+def upload_task(appname,stream,filepath):
+    print 'task'
+
+
+
+def upload_file(bucket,key,local_file):
+    handler = putufile.PutUFile(public_key, private_key)
+    ret, resp = handler.putfile(bucket, key, local_file)
+    print 'status ',resp.status_code  
 
 
 if __name__ == "__main__":
