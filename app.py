@@ -57,7 +57,6 @@ celery = make_celery(app)
 @celery.task(name='app.upload_task')
 def upload_task(appname,stream,filepath):
     print 'uploadtask ', appname, stream, filepath 
-    
     file_key = os.path.basename(filepath)
     handler = putufile.PutUFile(public_key, private_key)
     ret, resp = handler.putfile(bucket_name, file_key, filepath)
