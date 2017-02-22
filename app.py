@@ -12,6 +12,8 @@ from celery import Celery
 from flask import Flask
 from flask import jsonify
 
+from flask  import request
+
 from ucloud.ufile import config
 from ucloud.ufile import putufile
 from ucloud.compact import b
@@ -62,7 +64,7 @@ def on_dvr():
 
     upload_task.delay(app,stream,file)
 
-    return 'ok'
+    return '0'
 
 
 @app.route('/api/on_publish', methods=['GET','POST'])
@@ -70,7 +72,7 @@ def on_publish():
 
     print request.values.to_dict()
 
-    return 'ok'
+    return '0'
 
 
 @app.route('/api/on_unpublish', methods=['GET','POST'])
@@ -78,7 +80,7 @@ def on_unpublish():
 
     print request.values.to_dict()
 
-    return 'ok'
+    return '0'
 
 
 
