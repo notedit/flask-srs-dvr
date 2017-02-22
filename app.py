@@ -53,7 +53,7 @@ celery = make_celery(app)
 @app.route('/api/on_dvr', methods=['GET','POST'])
 def on_dvr():
 
-    data = request.values.to_dict()
+    data = request.json 
 
     print 'on_dvr ',data 
 
@@ -70,7 +70,7 @@ def on_dvr():
 @app.route('/api/on_publish', methods=['GET','POST'])
 def on_publish():
 
-    print request.values.to_dict()
+    print request.json 
 
     return '0'
 
@@ -78,7 +78,7 @@ def on_publish():
 @app.route('/api/on_unpublish', methods=['GET','POST'])
 def on_unpublish():
 
-    print request.values.to_dict()
+    print request.json 
 
     return '0'
 
