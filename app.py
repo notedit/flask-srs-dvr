@@ -13,12 +13,29 @@ from flask import jsonify
 app = Flask(__name__)
 
 
-@app.route("/api/dvrs", methods=['GET','POST'])
-def on_dvrs():
+@app.route('/api/on_dvr', methods=['GET','POST'])
+def on_dvr():
 
     print request.values.to_dict()
 
     return 'ok'
+
+
+@app.route('/api/on_publish', methods=['GET','POST'])
+def on_publish():
+
+    print request.values.to_dict()
+
+    return 'ok'
+
+
+@app.route('/api/on_unpublish', methods=['GET','POST'])
+def on_unpublish():
+
+    print request.values.to_dict()
+
+    return 'ok'
+
 
 if __name__ == "__main__":
     app.run()
