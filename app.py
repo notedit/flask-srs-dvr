@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # author: llx
 
-import os 
+import os
 import uuid
 import hmac
 import hashlib
@@ -21,11 +21,29 @@ from ucloud.compact import b
 from ucloud.logger import logger, set_log_file
 from ucloud.compact import BytesIO
 
+import requests
+from requests.packages.urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
+
+
+session = requests.Session()
+
+retries = Retry(total=2,
+        backoff_factor=1,
+        status_forcelist=[ 500, 502, 503, 504 ])
+
+session.mount('http://', HTTPAdapter(max_retries=retries))
+session.mount('https://', HTTPAdapter(max_retries=retries))
+
+
+
+callback_url = 'http://localhost:5000/web/callback'
+
 config.set_default(uploadsuffix='.ufile.ucloud.cn')
 config.set_default(downloadsuffix='.ufile.ucloud.com.cn')
 
 
-public_key = 'peJQ+GdSe2xZCxvxuSmArNDzfc46RF86c6xyYnIck6NkzVPqPykZKQ==' 
+public_key = 'peJQ+GdSe2xZCxvxuSmArNDzfc46RF86c6xyYnIck6NkzVPqPykZKQ=='
 private_key = '4d384c6bb3113cadc354891109d37635b4aa8221'
 
 bucket_name = 'live-stream'
@@ -49,27 +67,43 @@ def make_celery(app):
             with app.app_context():
                 return TaskBase.__call__(self, *args, **kwargs)
     celery.Task = ContextTask
-    return celery 
+    return celery
 
 celery = make_celery(app)
 
 
 @celery.task(name='app.upload_task')
 def upload_task(appname,stream,filepath):
-    print 'uploadtask ', appname, stream, filepath 
+    print 'uploadtask ', appname, stream, filepath
     file_key = os.path.basename(filepath)
     handler = putufile.PutUFile(public_key, private_key)
     ret, resp = handler.putfile(bucket_name, file_key, filepath)
-    print 'upload result ', ret, resp 
+    print 'upload result ', ret, resp
+
+    data = {
+            'action':'on_upload',
+            'app':appname,
+            'stream':stream,
+            'file_key':file_key
+            }
+
+    http_callback.delay(data)
 
 
+@celery.task(name='app.http_callback')
+def http_callback(data):
+
+    res = session.post(callback_url,json=data)
+
+    print res.text
+    print data
 
 @app.route('/api/on_dvr', methods=['GET','POST'])
 def on_dvr():
 
-    data = request.json 
+    data = request.json
 
-    print 'on_dvr ',data 
+    print 'on_dvr ',data
 
     action = data['action']
     app = data['app']
@@ -84,7 +118,17 @@ def on_dvr():
 @app.route('/api/on_publish', methods=['GET','POST'])
 def on_publish():
 
-    print request.json 
+    data = request.json
+
+    print data
+
+    _data = {
+            'action':data['action'],
+            'app':data['app'],
+            'stream':data['stream']
+            }
+
+    http_callback.delay(_data)
 
     return '0'
 
@@ -92,12 +136,28 @@ def on_publish():
 @app.route('/api/on_unpublish', methods=['GET','POST'])
 def on_unpublish():
 
-    print request.json 
+    data = request.json
+
+    print data
+
+    _data = {
+            'action':data['action'],
+            'app':data['app'],
+            'stream':data['stream']
+            }
+
+    http_callback.delay(_data)
 
     return '0'
 
 
-    
+@app.route('/web/callback',methods=['GET','POST'])
+def web_callback():
+
+    print request.json
+
+    return 'yes'
+
 
 if __name__ == "__main__":
     app.run()
