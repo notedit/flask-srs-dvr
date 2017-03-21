@@ -37,7 +37,7 @@ session.mount('https://', HTTPAdapter(max_retries=retries))
 
 
 
-callback_url = 'http://localhost:5000/web/callback'
+callback_url = 'http://www.xhsd.com/video/callBack'
 
 config.set_default(uploadsuffix='.ufile.ucloud.cn')
 config.set_default(downloadsuffix='.ufile.ucloud.com.cn')
