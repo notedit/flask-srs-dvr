@@ -115,6 +115,25 @@ def on_dvr():
     return '0'
 
 
+@app.route('/api/on_connect',methods=['GET','POST'])
+def on_connect():
+
+    data = request.json
+
+    print 'on_connect ', data
+
+    return '0'
+
+@app.route('/api/on_close',methods=['GET','POST'])
+def on_close():
+
+    data = request.json
+
+    print 'on_close ', data
+
+    return '0'
+
+
 @app.route('/api/on_publish', methods=['GET','POST'])
 def on_publish():
 
