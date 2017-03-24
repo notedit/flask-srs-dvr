@@ -39,6 +39,8 @@ session.mount('https://', HTTPAdapter(max_retries=retries))
 
 callback_url = 'http://www.xhsd.com/video/callBack'
 
+callback_url = 'http://localhost:5000/web/callback'
+
 config.set_default(uploadsuffix='.ufile.ucloud.cn')
 config.set_default(downloadsuffix='.ufile.ucloud.com.cn')
 
@@ -173,6 +175,7 @@ def on_unpublish():
 @app.route('/web/callback',methods=['GET','POST'])
 def web_callback():
 
+    print 'web callback'
     print request.json
 
     return 'yes'
